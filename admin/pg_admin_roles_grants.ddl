@@ -1,4 +1,4 @@
-/*  postgres - Admin Module: Create basic roles and grants for the database. - ddl  */
+/*  postgres - Admin module: Create basic roles and grants for the database. - ddl  */
 
 
 # add login roles  
