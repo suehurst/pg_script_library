@@ -8,7 +8,8 @@ PostgreSQL Version: PostgreSQL 12.6\
 Revision History:
 | Version Number | Date | Editor | Description |
 | -------------- | ---------- | ----------------- | -------------------------------------|
-| 1.2 |   |   |   |
+| 1.3 |  |  |  |
+| 1.2 | 2022-01-19 | Susan Hurst | Added PostgreSQL version to top of page and corrected some spacing issues.  |
 | 1.1 | 2021-12-30 | Susan Hurst | Finally added README.md and starter scripts. |
 | 1.0 | 2021-11-25 | Susan Hurst | Initial Creation |
 
@@ -100,7 +101,7 @@ Schemas must be created before creating other database objects. Each module will
 ## Modules
 Modules are logical groupings of scripts that are intended to produce specific functionality.  For example, the BAR module only executes installation scripts for BAR functionality and nothing else. The Admin module is required but all other modules are optional, however BAR and Base are strongly recommended.
 
-- **Admin**
+- **Admin**\
 The Admin module must be installed first, as this is the seed for all other modules. Admin creates these objects:
     * Superuser: The database name is used for the superuser name.
     * Database: The database itself is created, after the superuser has been created.
@@ -111,7 +112,7 @@ The Admin module must be installed first, as this is the seed for all other modu
     * Grants of Group Roles to Login Roles. Each schema installation will assign grants to the Read and Write roles for its objects.
     * Grants select on tables in the public schema to the login roles. This allows all users to read any query results from the information schema or from pg_catalog, such as the views created in the devops schema for describing the database objects installed for the host database.
 
-- **BAR**  
+- **BAR**\
 The Backup-Audit-Recover module consists of 3 tables plus 2 functions and 2 procedures to capture inserts, updates, deletes and truncates in selected production tables, usually in the chief schema. Typically, the selected tables acquire data and modifications from users (humans), thus the need for auditing. Tables that are always loaded by an automated process may not need to be audited. Audit data include details about the user and the DML, including the actual SQL statement that was used.
 \
 The 3 tables are:
@@ -123,20 +124,20 @@ In order to populate bar.captured tables, the bar.install procedure must be call
 \
 Views are created in the devops schema for the 3 tables so that users have a friendly view of the audit data without the need to join tables together.
 
-- **Base**
+- **Base**\
 The Base module installs database objects that are the foundation of the host database:
     * Staging area for batch loading external data into the host database.
     * Safe storage area for production tables containing source data. Foundation for your single source of truth. It also provides a repository for lookup data that provisions drop-down lists in user interfaces, which preserves the geneaology of data that use lookup values.
     * Workzone for developers, operations engineers and users.
     * Convenience store for pre-built functions and procedures.
     
-- **FDW**
+- **FDW**\
 With the Foreign Data Wrapper module, your host database can set up a connection directly to one or more other external databases, including NoSQL databases. Each database management system requires its own handler. For more information about Foreign Data Wrappers see: [Foreign Data Wrappers](https://wiki.postgresql.org/wiki/Foreign_data_wrappers).
 \
 Pre-condition: **Base** module must be installed before installing **FDW** module.
 Pre-condition: Each connection to a foreign database must be declared in `pg_hba.conf`:\
-    **#**TYPE  DATABASE        USER            ADDRESS                 METHOD\
-    host	%FOREIGNDBNAME	%DBNAME%	%FOREIGNHOST%	%PASSW%
+    **#TYPE&nbsp;&nbsp;&nbsp;  DATABASE&nbsp;&nbsp;&nbsp;        USER&nbsp;&nbsp;&nbsp;            ADDRESS&nbsp;&nbsp;&nbsp;                 METHOD\
+    host&nbsp;&nbsp;&nbsp;	%FOREIGNDBNAME&nbsp;&nbsp;&nbsp;	%DBNAME%&nbsp;&nbsp;&nbsp;	%FOREIGNHOST%&nbsp;&nbsp;&nbsp;	%PASSW%**
 \
 The setup script provided in this module `pg_fdw_fdw_setup.ddl` includes:
     * Extension: Must be the proper extension for the external database management system. For example, connecting to another PostgreSQL database would require the `postgres_fdw` extension.
