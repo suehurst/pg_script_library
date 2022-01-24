@@ -2,7 +2,7 @@
 
 Title: README.md\
 Author: Susan Hurst\
-Contact me: susan.hurst@brookhurstdata.com
+Contact me: susan.hurst@brookhurstdata.com\
 Initial Creation: 2021-11-25\
 PostgreSQL Version: PostgreSQL 12.6\
 Revision History:
