@@ -1,14 +1,15 @@
 # PostgreSQL Script Library
 
 Title: README.md\
-Author: Susan Hurst\
+Author: Susan Hurst & Bob Johnson\
 Contact me: susan.hurst55@gmail.com\
-Initial Creation: 2021-11-25\
 PostgreSQL Version: PostgreSQL 12.6\
+Initial Creation: 2021-11-25\
 Revision History:
 | Version Number | Date | Editor | Description |
 | -------------- | ---------- | ----------------- | -------------------------------------|
-| 1.3 |  |  |  |
+| 1.4 | 2022-03-28 | Susan Hurst | Added more contributions by Bob Johnson. |
+| 1.3 |  | Susan Hurst | Added revisions suggested by Bob Johnson. |
 | 1.2 | 2022-01-19 | Susan Hurst | Added PostgreSQL version to top of page and corrected some spacing issues.  |
 | 1.1 | 2021-12-30 | Susan Hurst | Finally added README.md and starter scripts. |
 | 1.0 | 2021-11-25 | Susan Hurst | Initial Creation |
@@ -29,9 +30,9 @@ Revision History:
 ## Overview
 The PostgreSQL Script Library is a companion to the book, [The Left Side of Monday](https://www.publishingconceptsllc.com/product/the-left-side-of-monday/). Specifically, the PostgreSQL Script Library illustrates the CLEAN (Consistent Live Enduring Accessible Navigable) data discussion in *The Data Factory* chapter.\
 \
-The scripts are organized by module, via the naming convention pg_admin_, pg_bar_, pg_base_ and pg_fdw_. The intent is to allow the database creator to choose which modules to install, except for the required Admin module. Other modules will be published at a later date. The **Admin** module is not optional. It contains the first steps for getting started, such as creating the database, a superuser and default roles and grants. The **BAR** (Backup-Audit-Recover) module answers the questions: who?, what?, where?, when? how? and how much?. As the name suggests, the BAR module monitors database activity for selected tables. The **Base** module includes a staging area for batch uploads of data, a storage area for protecting your single source of truth, a devops area that provides developers and users everything they need to do their jobs without contaminating the source data and a convenience store full of ready-to-use stored functions and procedures. The **FDW** module is a must for connecting to external data sources...just use those sources in situ (where they are).\
+The scripts are organized by module, via the naming convention pg_admin_, pg_bar_, pg_base_ and pg_fdw_. The intent is to allow the database creator to choose which modules to install, except for the required Admin, BAR and Base modules. Other modules will be published at a later date. The **Admin** module is not optional. It contains the first steps for getting started, such as creating the database, a superuser and default roles and grants. The **BAR** (Backup-Audit-Recover) module answers the questions: who?, what?, where?, when? how? and how much?. As the name suggests, the BAR module monitors database activity for selected tables. The **Base** module includes a staging area for batch uploads of data, a storage area for protecting your single source of truth, a devops area that provides developers and users everything they need to do their jobs without contaminating the source data and a convenience store full of ready-to-use stored functions and procedures. The **FDW** module is a must for connecting to external data sources...just use those sources in situ (where they are).\
 \
-Basic functionality for building the foundation of your database is included in these scripts. Many functions and procedures are provided to limit the human error factor from contaminating your data asset. Even when errors occur, you can easily do root cause analysis to determine what went wrong so you can undo the error. Protections are built into the database objects themselves so that your database can defend itself.\
+Basic functionality for building the foundation of your database is included in these scripts. At least 15 functions and procedures are provided to reduce the human error factor from contaminating your data asset. Even when errors occur, you can easily do root cause analysis to determine what went wrong so you can undo the error. Protections are built into the database objects themselves so that your database can defend itself. At least 17 views are provided in the required installation to show the full scope of related entities, including views of database objects and their descriptions. Views of sources tables that live in the chief schema are updatable with safeguards in place to deter ad hoc data manipulation directly in the source tables.\
 \
 Use the principles for building the new foundation of your database as you develop new database objects specific to your business.
 
@@ -42,7 +43,7 @@ Standard abbreviations and naming conventions are used throughout all script nam
 | abbr | Abbreviation | Short name value for an entity. |
 | bar | Backup-Audit-Recover | Name of schema that manages the BAR (Backup-Audit-Recovery) process. Database objects using `bar` in object names and aliases are required for building the BAR process. See full description of BAR module in the Modules section. |
 | base | Base | Database objects using `base` in object names are foundational objects upon which other objects are built. See full description of Base module in the Modules section. |
-| bk | Business Key | One or more column values that together identify a unique row in a database table. Also known as an alternate key. |
+| bk | Business Key | One or more natural business column values that together identify a unique row in a database table. Also known as an alternate key. This specifically excludes any generted surrogate keys. |
 | chief | Chief | Name of schema optimized for source data storage, not for data presentation. | 
 | db | Database | The scripts names that have `db` in the name are for creating views in the Devops schema for the purpose of validating and documenting the database objects. These scripts have variables named %DBNAME% that must be replaced with the name of the database. |
 | ddl | Data Definition Language | SQL syntax used for creating, modifying or deleting database objects. |
@@ -77,7 +78,7 @@ Standard abbreviations and naming conventions are used throughout all script nam
 Schemas must be created before creating other database objects. Each module will install the schemas required for that module. Here are descriptions of the schemas included in the BAR and Base modules. Note: The public schema is not used for any database objects as a security precaution. Grants are specifically revoked from public to the database objects in the schemas listed below. Public must still be available to users, however, for access to pg_catalog and to information schema.
 | Schema Name | Description |
 | ----------- | --------------------------------------------- |
-| bar | Habitat for Backup-Audit-Recover (BAR) processes and data. All insert, update and delete activity lives here for selected tables participating in the BAR (Backup-Audit-Recovery) process. SQL queries that generated the data reside here as well for the purpose of auditing and/or recovering data that were changed. |
+| bar | Habitat for Backup-Audit-Recover (BAR) processes and data. All insert, update and delete activity lives here for selected tables participating in the BAR process. SQL queries that generated the data reside here as well for the purpose of auditing and/or recovering data that were changed. |
 | chief | Master habitat for storing and protecting source data and data associations. The chief schema provides data to views in the devops and other schemas but is not intended to be a workzone itself. Rather, the purpose of the chief schema is to protect a single source of truth for each entity that resides there. |
 | devops | Workzone for developers, operations engineers and users. All data in the bar, chief and other schemas are represented here, complete with names, descriptions and other useful associations. Views and materialized views provide the source data as required by developers and researchers. Views of source tables from the chief schema are updatable to allow safe data operations and to facilitate User Interface development. Views typically join 2 or more tables together so that users can see human readable values for foreign keys instead of identifiers. |
 | stg | Staging area for batch loading external data into source tables. The stg schema includes staging tables as well as functions to properly load data into source tables in the chief schema. A load reject log table provides feedback about individual items that could not be loaded. |
@@ -97,9 +98,10 @@ Schemas must be created before creating other database objects. Each module will
     * %FOREIGNPORT%: Port for foreign database on the foreign server.  FDW module.
     * %FOREIGNDBNAME%: Name of foreign database. FDW module.
     * %PASSW%: Password to foreign database. FDW module.
+- PostGIS must be installed to enable geocoding of addresses, locations and any other geospatial requirements for your database.
     
 ## Modules
-Modules are logical groupings of scripts that are intended to produce specific functionality.  For example, the BAR module only executes installation scripts for BAR functionality and nothing else. The Admin module is required but all other modules are optional, however BAR and Base are strongly recommended.
+Modules are logical groupings of scripts that are intended to produce specific functionality.  For example, the BAR module only executes installation scripts for BAR functionality and nothing else. The Admin, BAR and Base modules are required but all other modules are optional.
 
 - **Admin**\
 The Admin module must be installed first, as this is the seed for all other modules. Admin creates these objects:
@@ -115,6 +117,10 @@ The Admin module must be installed first, as this is the seed for all other modu
 - **BAR**\
 The Backup-Audit-Recover module consists of 3 tables plus 2 functions and 2 procedures to capture inserts, updates, deletes and truncates in selected production tables, usually in the chief schema. Typically, the selected tables acquire data and modifications from users (humans), thus the need for auditing. Tables that are always loaded by an automated process may not need to be audited. Audit data include details about the user and the DML, including the actual SQL statement that was used.
 \
+Variables that need values are:
+    * %DBNAME Name of the host database.
+    * %HOSTNAME: Host name or IP address of the host database server.
+\ 
 The 3 tables are:
     * `bar.captured_dml_data` (actual rows that were modified and DML type)
     * `bar.captured_dml_events` (user audit info and query that was executed)
@@ -127,17 +133,30 @@ Views are created in the devops schema for the 3 tables so that users have a fri
 - **Base**\
 The Base module installs database objects that are the foundation of the host database:
     * Staging area for batch loading external data into the host database.
-    * Safe storage area for production tables containing source data. Foundation for your single source of truth. It also provides a repository for lookup data that provisions drop-down lists in user interfaces, which preserves the geneaology of data that use lookup values.
+    * Safe storage area for production tables containing source data. Foundation for your single source of truth. It also provides a repository for lookup data that provisions drop-down lists in user interfaces, which preserves the genealogy of data that use lookup values.
     * Workzone for developers, operations engineers and users.
     * Convenience store for pre-built functions and procedures.
+\
+Variables that need values are:
+    * %DBNAME Name of the host database.
+    * %HOSTNAME: Host name or IP address of the host database server.
+\
     
 - **FDW**\
 With the Foreign Data Wrapper module, your host database can set up a connection directly to one or more other external databases, including NoSQL databases. Each database management system requires its own handler. For more information about Foreign Data Wrappers see: [Foreign Data Wrappers](https://wiki.postgresql.org/wiki/Foreign_data_wrappers).
 \
+Variables that need values are:
+    * %FDW_HANDLER%: Foreign Data Wrapper file handler. Example: `postgres_fdw`. FDW module.
+    * %SERVERNAME%: Name of the foreign server as it will appear in the host database. FDW module.
+    * %FOREIGNHOST%: Host name or IP address where foreign database lives. FDW module.
+    * %FOREIGNPORT%: Port for foreign database on the foreign server.  FDW module.
+    * %FOREIGNDBNAME%: Name of foreign database. FDW module.
+    * %PASSW%: Password to foreign database. FDW module.
+\ 
 Pre-condition: **Base** module must be installed before installing **FDW** module.
 Pre-condition: Each connection to a foreign database must be declared in `pg_hba.conf`:\
-    **#TYPE&nbsp;&nbsp;&nbsp;  DATABASE&nbsp;&nbsp;&nbsp;        USER&nbsp;&nbsp;&nbsp;            ADDRESS&nbsp;&nbsp;&nbsp;                 METHOD\
-    host&nbsp;&nbsp;&nbsp;	%FOREIGNDBNAME&nbsp;&nbsp;&nbsp;	%DBNAME%&nbsp;&nbsp;&nbsp;	%FOREIGNHOST%&nbsp;&nbsp;&nbsp;	%PASSW%**
+    **#**TYPE&nbsp;&nbsp;&nbsp; DATABASE&nbsp;&nbsp;&nbsp; USER&nbsp;&nbsp;&nbsp; ADDRESS&nbsp;&nbsp;&nbsp; METHOD\
+    host&nbsp;&nbsp;&nbsp; %FOREIGNDBNAME&nbsp;&nbsp;&nbsp;	%DBNAME%&nbsp;&nbsp;&nbsp; %FOREIGNHOST%&nbsp;&nbsp;&nbsp; %PASSW%
 \
 The setup script provided in this module `pg_fdw_fdw_setup.ddl` includes:
     * Extension: Must be the proper extension for the external database management system. For example, connecting to another PostgreSQL database would require the `postgres_fdw` extension.
@@ -149,9 +168,10 @@ The setup script provided in this module `pg_fdw_fdw_setup.ddl` includes:
 
 ## Implementation Assumptions
 - Database creator does not have any external scripts to execute the DDL scripts.
-- Database creator uses an IDE (Integrated Development Environment) such as PGAdmin, DBeaver, SQL Developer, etc., to execute DDL scripts.
+- Database creator uses an IDE (Integrated Development Environment) such as PGAdmin, DBeaver, SQL Developer, etc., to execute DDL scripts. Note: You may have to choose File/Open to open scripts with .ddl extension in some IDEs.
 - Although not required, database creator is encouraged to create install scripts, using shell scripts, Python, PHP or any other scripting language. Use the [Implementation Steps] as pseudocode.
 - Modules are installed in order of operations dependencies: Admin -> BAR -> Base -> FDW.
+- Postgis server must be installed before 
 
 ## Implementation Steps
 - **Admin**
