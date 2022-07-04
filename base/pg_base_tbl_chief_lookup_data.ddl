@@ -12,6 +12,9 @@ create table chief.lookup_data
       ,create_dttz       chief.std_create_dttz
       ,constraint ldat_pk primary key (ldat_id)
       ,constraint ldat_bk unique (lcat_id,v_name)
+      ,constraint ldat_name_ck check (name <> '')
+      ,constraint ldat_lcat_ck check (lcat_id::text <> ''::text)
+      ,constraint ldat_src_ck check (src_id::text <> ''::text)
       )
 ;
 
@@ -24,6 +27,10 @@ comment on column chief.lookup_data.src_id is 'Identifier the software module or
 comment on column chief.lookup_data.orig_source_ident is 'Original identifier for the same entity that was migrated from a legacy or external source.';
 comment on column chief.lookup_data.v_name is 'Virtual column to ensure uniqueness of the lookup data name.  It compares the lower case version and digits of the name without spaces or special characters to any other values that may already exist with that name.';
 comment on column chief.lookup_data.create_dttz is 'Timestamp with time zone of the original insertion of the row.';
+comment on constraint ldat_bk on chief.lookup_data is 'Business Key on chief.lookup_data. Unique constraint on (lcat_id,v_name).';
+comment on constraint ldat_name_ck on chief.lookup_data is 'Check constraint on chief.lookup_data.name to disallow an empty string '''' value.'; 
+comment on constraint ldat_lcat_ck on chief.lookup_data is 'Check constraint on chief.lookup_data.lcat_id to disallow an empty string '''' value.';
+comment on constraint ldat_src_ck on chief.lookup_data is 'Check constraint on chief.lookup_data.src_id to disallow an empty string '''' value.';
 
 /****** For reference only. Foreign Keys will be created after all tables have been created. ******
 alter table chief.lookup_data add constraint ldat2lcat_fk foreign key (lcat_id) references chief.lookup_categories(lcat_id);
