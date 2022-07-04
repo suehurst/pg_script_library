@@ -14,10 +14,18 @@ $$
                ,rejecting_function
                ,identifier
                )
-         select 'STG03: Could not create Source: ' ||
-                ' because Stg.Source.Name missing (null)'
+         select 'M-SRC001: Could not create Source: ' ||
+                ' because stg.source.name is empty'
                ,'stg.migrate_sources()'
-               ,'stg.src_id:' || src.src_id::text
+               ,'Source Name:' || src.name
+           from stg.sources  src
+          where src.name = ''
+            and src.migrated_dttz = '-infinity'
+         union
+         select 'M-SRC002: Could not create Source: ' ||
+                ' because stg.source.name is null'
+               ,'stg.migrate_sources()'
+               ,'Source Name:' || src.name
            from stg.sources  src
           where src.name is null
             and src.migrated_dttz = '-infinity'
@@ -34,7 +42,10 @@ $$
                ,src.description
                ,src.orig_source_ident
            from stg.sources  src
-          where src.name is not null
+          where (src.name is not null
+                 and
+                 src.name != ''
+                )
             and src.migrated_dttz = '-infinity'
          on conflict do nothing
          returning name
@@ -53,5 +64,6 @@ $$
     select 'Sources:',count(*) from migrated
     ;
 $$;
+
 
 comment on function stg.migrate_sources() is 'Routine to bulk load sources into chief.sources. Precondition: batch load data must be in stg.sources before loading.';
