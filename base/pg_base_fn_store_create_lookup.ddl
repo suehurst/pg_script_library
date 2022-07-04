@@ -6,8 +6,8 @@ create function store.create_lookup
       (lcat_name_in                  text
       ,lcat_description_in           text
       ,ldat_name_in                  text
-      ,ldat_description_in           text default null
-      ,source_in                     text default null
+      ,ldat_description_in           text
+      ,source_in                     text
       ,orig_source_ident_in          text default null  
       ) 
 returns boolean
@@ -20,6 +20,7 @@ declare
 	l_created_ok   boolean;
     l_src_id       chief.std_id;
     l_lcat_id      chief.std_id;
+    l_src_name     chief.std_name;
 begin
     -- get valid sources for lookups (assumes same source for lcat and for ldat)
     if source_in is not null
@@ -30,10 +31,15 @@ begin
         if l_src_id is null
         then
             -- do not allow the new entry
-            raise exception 'Source ''%'' does not exist.',source_in
+            raise exception 'LKUP0001: Source ''%'' does not exist.',source_in
             -- future:  offer to add new source from UI before proceeding
             using hint = E'You must choose a valid Source name from devops.sources.\nYou may Update or Add a Source in devops.sources.';  
         end if;
+    elseif source_in = ''
+    then -- do not allow the new entry
+         raise exception 'LKUP002: Source ''%'' is an empty string.',name_in
+         using hint = E'You must enter a valid Source name.'
+         ; 
     else
         -- use the src_id for the UI that is calling this function
         l_src_id = (select store.src_id('UI - Create Lookup'));
@@ -75,13 +81,13 @@ begin
 	on conflict do nothing
 	;
     -- see if the lookup exists. If so then report True for created. While this may not physically be the case ( it could
-	-- have already existed) the state of the database is consistent as at the end of he process the desired data existed.  
+	-- have already existed) the state of the database is consistent as at the end of the process the desired data existed.  
     l_created_ok = EXISTS (select null
                              from chief.lookup_data ldat
-                            where 1=1
+                            where ldat.lcat_id = l_lcat_id
                               and ldat.v_name = store.virtual_string(ldat_name_in)
                            );
-                   raise notice 'LKUP10 l_created_ok after trying to insert a new lookup data entity is: %', l_created_ok::text;
+                   raise notice 'LKUP003 l_created_ok after trying to insert a new lookup data entity is: %', l_created_ok::text;
     if not l_created_ok
     then
         -- still not created, but does the requested category exist
@@ -95,7 +101,7 @@ begin
             perform chief.gen_load_reject_message
                    (k_this_function
    		  		   ,ldat_name_in
-   		    	   ,format ('LK002: Could not create lookup data, but condition UNKNOWN'
+   		    	   ,format ('LKUP004: Could not create lookup data, but condition UNKNOWN'
                            ,coalesce(ldat_name_in)
                            )
                    );
@@ -104,13 +110,13 @@ begin
             perform chief.gen_load_reject_message
                    (k_this_function
    		  		   ,ldat_name_in
-   				   ,format ('LK001: Could not create lookup data as category ''%'' does not exist'
+   				   ,format ('LKUP005: Could not create lookup data as category ''%'' does not exist'
                            ,coalesce(lcat_name_in)
                            )
                    );
         end if ;
     end if ;
-    raise notice 'LKUP20 l_created_ok returned by store.create_lookup (......) is : %', l_created_ok;
+    raise notice 'LKUP005 l_created_ok returned by store.create_lookup (......) is : %', l_created_ok;
 	-- and exit.
 	return l_created_ok;
 end;
