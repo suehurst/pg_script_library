@@ -20,30 +20,53 @@ $$
                                from chief.sources src
                               where src.v_name = store.virtual_string(stg.source)
                             )
+          union
+          select stg.lcat_name
+                ,stg.lcat_description
+                ,stg.ldat_name
+                ,stg.ldat_description
+                ,stg.source
+            from stg.lookup stg
+           where stg.lcat_name = ''
+              or stg.lcat_name is null
+              or stg.ldat_name = ''
+              or stg.ldat_name is null
+              or stg.source = ''
+              or stg.source is null
          ) 
          /* Write error message so User knows what and why an entry failed. */ 
         ,errs as
-         (insert into stg.load_reject_log
+        (insert into stg.load_reject_log
                 (message
                 ,rejecting_function
                 ,identifier
-                ) 
-          select case 
-                 when source is not null 
+                )                 
+         select case 
+                 when source != '' 
+                  and (select store.src_id(source)) is null
                  then
-                      'LK001: Could not create Lookup: ' ||
+                      'M-LK001: Could not create Lookup: ' ||
                       cat_name||'.'||dat_name  ||
                       ' because Source: '       ||source||
                       ' does not exist in chief.sources.' 
-                 else 'LK002: Could not create Lookup: ' ||
+                 when source = ''
+                 then 'M-LK002: Could not create Lookup: ' ||
                       cat_name||'.'||dat_name  ||
-                      ' because stg.lookup.source is missing (null).'
-                 end 
-                ,'Test Load: Stg.lookup' 
+                      ' because stg.lookup.source is empty or is null.'
+                 when cat_name = ''
+                 then 'M-LK003: Could not create Lookup: ' ||
+                      cat_name||'.'||dat_name  ||
+                      ' because stg.lookup.lcat_name is empty or is null.'
+                 when dat_name = ''
+                 then 'M-LK004: Could not create Lookup: ' ||
+                      cat_name||'.'||dat_name  ||
+                      ' because stg.lookup.ldat_name is empty or is null.'
+                 end
+                ,'stg.migrate_lookups()' 
                 ,cat_name || '.' || dat_name 
             from invalids
           returning identifier
-         ) 
+         )  
          /* Insert new Lookup Categories into chief.lookup_categories. Return lcat_id if a category already exists. */
         ,new_lcat as 
          (insert into chief.lookup_categories
