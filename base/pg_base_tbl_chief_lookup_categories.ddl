@@ -11,6 +11,8 @@ create table chief.lookup_categories
       ,create_dttz       chief.std_create_dttz
       ,constraint lcat_pk primary key (lcat_id)
       ,constraint lcat_bk unique (v_name)
+      ,constraint lcat_name_ck check (name <> '')
+      ,constraint lcat_src_ck check (src_id::text <> ''::text)
       )
 ;
 
@@ -22,6 +24,9 @@ comment on column chief.lookup_categories.src_id is 'Identifier the software mod
 comment on column chief.lookup_categories.orig_source_ident is 'Original identifier for the same entity that was migrated from a legacy or external source.';
 comment on column chief.lookup_categories.v_name is 'Virtual column to ensure uniqueness of the lookup category name.  It compares the lower case version and digits of the name without spaces or special characters to any other values that may already exist with that name.';
 comment on column chief.lookup_categories.create_dttz is 'Timestamp with time zone of the original insertion of the row.';
+comment on constraint lcat_bk on chief.lookup_categories is 'Business Key on chief.lookup_categories. Unique constraint on (v_name).'; 
+comment on constraint lcat_src_ck on chief.lookup_categories is 'Check constraint on chief.lookup_categories.src_id to disallow an empty string '''' value.'; 
+comment on constraint lcat_name_ck on chief.lookup_categories is 'Check constraint on chief.lookup_categories.name to disallow an empty string '''' value.'; 
 
 /****** For reference only. Foreign Keys will be created after all tables have been created. ******
 alter table chief.lookup_categories add constraint lcat2src_fk foreign key (src_id) references chief.sources(src_id);
